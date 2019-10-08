@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Reflection;
+using YoutubeExplode;
+using YoutubeExplode.Models;
 
 namespace YouTubeToPlex
 {
@@ -22,6 +26,9 @@ namespace YouTubeToPlex
 			EnsureFfmpegDependency();
 
 			var seenItems = new SeenItems(downloadFolder);
+
+			var allVideos = GetPlaylistVideos(playlistId);
+			var newVideos = FilterAndSortVideos(allVideos, seenItems.GetIds());
 		}
 
 		private static void EnsureFfmpegDependency()
@@ -40,6 +47,19 @@ namespace YouTubeToPlex
 					.GetEntry($"{ffmpegZipFileName.Replace(".zip", "")}/bin/ffmpeg.exe")
 					.ExtractToFile(ffmpegFilePath);
 			}
+		}
+
+		private static IReadOnlyList<Video> GetPlaylistVideos(string playlistId)
+		{
+			Console.WriteLine($"Getting playlist {playlistId}");
+			var client = new YoutubeClient();
+			var playlist = client.GetPlaylistAsync(playlistId).Result;
+			return playlist.Videos;
+		}
+
+		private static IEnumerable<Video> FilterAndSortVideos(IEnumerable<Video> allVideos, IEnumerable<string> seenItemIds)
+		{
+			return allVideos.Where(video => !seenItemIds.Contains(video.Id)).OrderBy(item => item.UploadDate);
 		}
 	}
 }
