@@ -2,7 +2,7 @@
 
 namespace YouTubeToPlex
 {
-	class Program
+	internal class Program
 	{
 		/// <summary>
 		/// Downloads videos from a YouTube playlist and creates metadata for use in media players.
@@ -11,7 +11,8 @@ namespace YouTubeToPlex
 		/// <param name="downloadFolder">The folder to download videos to.</param>
 		public static void Main(string playlistId, string downloadFolder)
 		{
-			Console.WriteLine("Hello World!");
+			if (playlistId == null) throw new ArgumentNullException(nameof(playlistId));
+			if (downloadFolder == null) throw new ArgumentNullException(nameof(downloadFolder));
 		}
 	}
 }
