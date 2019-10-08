@@ -20,6 +20,8 @@ namespace YouTubeToPlex
 
 			Directory.CreateDirectory(downloadFolder);
 			EnsureFfmpegDependency();
+
+			var seenItems = new SeenItems(downloadFolder);
 		}
 
 		private static void EnsureFfmpegDependency()
