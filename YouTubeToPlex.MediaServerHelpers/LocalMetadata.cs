@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Net.Http;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -7,6 +9,13 @@ namespace YouTubeToPlex.MediaServerHelpers
 {
 	public class LocalMetadata
 	{
+		private HttpClient HttpClient { get; }
+
+		public LocalMetadata(HttpClient httpClient)
+		{
+			HttpClient = httpClient;
+		}
+
 		public void Save(TVShow metadata, string folder)
 		{
 			Save(
@@ -18,6 +27,22 @@ namespace YouTubeToPlex.MediaServerHelpers
 						new XElement("premiered", metadata.Premiered?.ToString("yyyy-MM-dd"))
 					)),
 				folder, "tvshow");
+
+			if (!string.IsNullOrWhiteSpace(metadata.PosterPathOrUrl))
+			{
+				var posterMetadataPath = Path.Combine(folder, $"folder{Path.GetExtension(metadata.PosterPathOrUrl)}");
+				if (Uri.TryCreate(metadata.PosterPathOrUrl, UriKind.Absolute, out var uri) &&
+					!uri.IsFile)
+				{
+					var response = HttpClient.GetAsync(uri).Result;
+					using var fileStream = new FileStream(posterMetadataPath, FileMode.CreateNew);
+					response.Content.CopyToAsync(fileStream);
+				}
+				else
+				{
+					File.Copy(metadata.PosterPathOrUrl, posterMetadataPath);
+				}
+			}
 		}
 
 		public void Save(Episode metadata, string folder, string fileNameWithoutExtension)
