@@ -1,0 +1,11 @@
+﻿# EditorConfig (https://editorconfig-specification.readthedocs.io/en/latest/#supported-properties)
+[*]
+indent_style = tab
+indent_size = 3
+tab_width = 3
+insert_final_newline = true
+charset = utf-8-bom
+
+# .NET (https://aka.ms/editorconfigdocs)
+[*]
+dotnet_sort_system_directives_first = true

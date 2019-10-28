@@ -7,12 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YouTubeToPlex", "YouTubeToP
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02842A89-21F1-4C91-AA57-8E32D2473411}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YouTubeToPlex.Tests", "YouTubeToPlex.Tests\YouTubeToPlex.Tests.csproj", "{E783FCEB-5E76-44F1-9174-4ACC0B546A03}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YouTubeToPlex.MediaServerHelpers", "YouTubeToPlex.MediaServerHelpers\YouTubeToPlex.MediaServerHelpers.csproj", "{3B8DE4F0-2056-44CE-9019-17C3D22CD30C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YouTubeToPlex.MediaServerHelpers", "YouTubeToPlex.MediaServerHelpers\YouTubeToPlex.MediaServerHelpers.csproj", "{3B8DE4F0-2056-44CE-9019-17C3D22CD30C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
