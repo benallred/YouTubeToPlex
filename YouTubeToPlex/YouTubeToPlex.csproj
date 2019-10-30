@@ -18,4 +18,8 @@
 		<PackageReference Include="YoutubeExplode.Converter" Version="1.4.3" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\YouTubeToPlex.MediaServerHelpers\YouTubeToPlex.MediaServerHelpers.csproj" />
+	</ItemGroup>
+
 </Project>

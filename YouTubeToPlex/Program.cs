@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using YoutubeExplode;
@@ -11,6 +12,7 @@ using YoutubeExplode.Converter;
 using YoutubeExplode.Models;
 using YoutubeExplode.Models.ClosedCaptions;
 using YoutubeExplode.Models.MediaStreams;
+using YouTubeToPlex.MediaServerHelpers;
 
 namespace YouTubeToPlex
 {
@@ -30,15 +32,19 @@ namespace YouTubeToPlex
 			EnsureFfmpegDependency();
 
 			var seenItems = new SeenItems(downloadFolder);
+			var localMetadata = new LocalMetadata(new HttpClient());
 
-			var allVideos = GetPlaylistVideos(playlistId);
+			var playlist = GetPlaylist(playlistId);
+			EnsureMetadata(playlist, downloadFolder, localMetadata);
+
+			var allVideos = playlist.Videos;
 			var newVideos = FilterAndSortVideos(allVideos, seenItems.GetIds());
-			ProcessVideos(newVideos, seenItems, downloadFolder);
+			ProcessVideos(newVideos, seenItems, downloadFolder, localMetadata);
 		}
 
 		private static void EnsureFfmpegDependency()
 		{
-			var ffmpegFilePath = Path.Combine(new FileInfo(Assembly.GetExecutingAssembly().Location).DirectoryName, @"ffmpeg.exe");
+			var ffmpegFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, @"ffmpeg.exe");
 			if (!File.Exists(ffmpegFilePath))
 			{
 				Console.WriteLine("Downloading ffmpeg");
@@ -54,12 +60,11 @@ namespace YouTubeToPlex
 			}
 		}
 
-		private static IReadOnlyList<Video> GetPlaylistVideos(string playlistId)
+		private static Playlist GetPlaylist(string playlistId)
 		{
 			Console.WriteLine($"Getting playlist {playlistId}");
 			var client = new YoutubeClient();
-			var playlist = client.GetPlaylistAsync(playlistId).Result;
-			return playlist.Videos;
+			return client.GetPlaylistAsync(playlistId).Result;
 		}
 
 		private static IEnumerable<Video> FilterAndSortVideos(IEnumerable<Video> allVideos, IEnumerable<string> seenItemIds)
@@ -67,7 +72,7 @@ namespace YouTubeToPlex
 			return allVideos.Where(video => !seenItemIds.Contains(video.Id)).OrderBy(item => item.UploadDate);
 		}
 
-		private static void ProcessVideos(IEnumerable<Video> videos, SeenItems seenItems, string downloadFolder)
+		private static void ProcessVideos(IEnumerable<Video> videos, SeenItems seenItems, string downloadFolder, LocalMetadata localMetadata)
 		{
 			var client = new YoutubeClient();
 			var seasonFolder = Path.Combine(downloadFolder, "Season 1");
@@ -90,6 +95,7 @@ namespace YouTubeToPlex
 
 				DownloadVideo(client, video, seasonFolder, videoFileNameBase, progress);
 				DownloadAllCaptions(client, video, seasonFolder, videoFileNameBase, progress);
+				CreateMetadata(video, seasonFolder, videoFileNameBase, localMetadata);
 
 				seenItems.SaveId(video.Id);
 
@@ -148,6 +154,30 @@ namespace YouTubeToPlex
 							progress)
 						.Wait();
 				});
+		}
+
+		private static void EnsureMetadata(Playlist playlist, string downloadFolder, LocalMetadata localMetadata)
+		{
+			if (!File.Exists(Path.Combine(downloadFolder, "tvshow.nfo")))
+			{
+				Console.WriteLine("Creating metadata");
+				Console.Write("\tInput poster path or URL: ");
+				var posterPathOrUrl = Console.ReadLine();
+				localMetadata.Save(
+					new TVShow(
+						title: playlist.Title,
+						plot: playlist.Description,
+						premiered: playlist.Videos.OrderBy(video => video.UploadDate).First().UploadDate,
+						posterPathOrUrl: posterPathOrUrl),
+					downloadFolder);
+			}
+		}
+
+		private static void CreateMetadata(Video video, string downloadFolder, string videoFileNameBase, LocalMetadata localMetadata)
+		{
+			Console.WriteLine();
+			Console.Write("        \tmetadata");
+			localMetadata.Save(new Episode(title: video.Title, plot: video.Description, aired: video.UploadDate), downloadFolder, videoFileNameBase);
 		}
 	}
 }
