@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using YoutubeExplode;
 using YoutubeExplode.Converter;
@@ -29,10 +26,11 @@ namespace YouTubeToPlex
 			if (downloadFolder == null) throw new ArgumentNullException(nameof(downloadFolder));
 
 			Directory.CreateDirectory(downloadFolder);
-			EnsureFfmpegDependency();
 
+			var httpClient = new HttpClient();
 			var seenItems = new SeenItems(downloadFolder);
-			var localMetadata = new LocalMetadata(new HttpClient());
+			var localMetadata = new LocalMetadata(httpClient);
+			EnsureFfmpegDependency(new Ffmpeg(httpClient));
 
 			var playlist = GetPlaylist(playlistId);
 			EnsureMetadata(playlist, downloadFolder, localMetadata);
@@ -42,22 +40,10 @@ namespace YouTubeToPlex
 			ProcessVideos(newVideos, seenItems, downloadFolder, localMetadata);
 		}
 
-		private static void EnsureFfmpegDependency()
+		private static void EnsureFfmpegDependency(Ffmpeg ffmpeg)
 		{
-			var ffmpegFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, @"ffmpeg.exe");
-			if (!File.Exists(ffmpegFilePath))
-			{
-				Console.WriteLine("Downloading ffmpeg");
-				const string ffmpegZipFileName = "ffmpeg-4.2.1-win64-static.zip";
-				var ffmpegZipFilePath = Path.Combine(Path.GetTempPath(), ffmpegZipFileName);
-				using var webClient = new WebClient();
-				webClient.DownloadFile($"https://ffmpeg.zeranoe.com/builds/win64/static/{ffmpegZipFileName}", ffmpegZipFilePath);
-				Console.WriteLine("Extracting ffmpeg");
-				ZipFile
-					.OpenRead(ffmpegZipFilePath)
-					.GetEntry($"{ffmpegZipFileName.Replace(".zip", "")}/bin/ffmpeg.exe")
-					.ExtractToFile(ffmpegFilePath);
-			}
+			Console.WriteLine("Finding or downloading ffmpeg");
+			ffmpeg.EnsureExists();
 		}
 
 		private static Playlist GetPlaylist(string playlistId)
@@ -116,7 +102,7 @@ namespace YouTubeToPlex
 
 		private static void DownloadVideo(IYoutubeClient client, Video video, string downloadFolder, string videoFileNameBase, IProgress<double> progress)
 		{
-			var converter = new YoutubeConverter(client);
+			var converter = new YoutubeConverter(client, Ffmpeg.DefaultFilePath);
 
 			var mediaStreamInfoSet = client.GetVideoMediaStreamInfosAsync(video.Id).Result;
 			var videoStreamInfo = mediaStreamInfoSet.Video.OrderByDescending(info => info.VideoQuality).ThenByDescending(info => info.Framerate).First();
