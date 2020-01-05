@@ -19,8 +19,9 @@ namespace YouTubeToPlex
 		/// Downloads videos from a YouTube playlist and creates metadata for use in media players.
 		/// </summary>
 		/// <param name="playlistId">The ID of the YouTube playlist.</param>
+		/// <param name="doNotReorder">If true, the default playlist order is used. If false, the playlist is ordered by upload date.</param>
 		/// <param name="downloadFolder">The folder to download videos to.</param>
-		public static void Main(string playlistId, string downloadFolder)
+		public static void Main(string playlistId, bool doNotReorder, string downloadFolder)
 		{
 			if (playlistId == null) throw new ArgumentNullException(nameof(playlistId));
 			if (downloadFolder == null) throw new ArgumentNullException(nameof(downloadFolder));
@@ -36,7 +37,8 @@ namespace YouTubeToPlex
 			EnsureMetadata(playlist, downloadFolder, localMetadata);
 
 			var allVideos = playlist.Videos;
-			var newVideos = FilterAndSortVideos(allVideos, seenItems.GetIds());
+			var sortedVideos = doNotReorder ? allVideos : allVideos.OrderBy(item => item.UploadDate).ToList();
+			var newVideos = sortedVideos.Where(video => !seenItems.GetIds().Contains(video.Id));
 			ProcessVideos(newVideos, seenItems, downloadFolder, localMetadata);
 		}
 
@@ -51,11 +53,6 @@ namespace YouTubeToPlex
 			Console.WriteLine($"Getting playlist {playlistId}");
 			var client = new YoutubeClient();
 			return client.GetPlaylistAsync(playlistId).Result;
-		}
-
-		private static IEnumerable<Video> FilterAndSortVideos(IEnumerable<Video> allVideos, IEnumerable<string> seenItemIds)
-		{
-			return allVideos.Where(video => !seenItemIds.Contains(video.Id)).OrderBy(item => item.UploadDate);
 		}
 
 		private static void ProcessVideos(IEnumerable<Video> videos, SeenItems seenItems, string downloadFolder, LocalMetadata localMetadata)
