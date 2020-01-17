@@ -21,7 +21,8 @@ namespace YouTubeToPlex
 		/// <param name="playlistId">The ID of the YouTube playlist.</param>
 		/// <param name="doNotReorder">If true, the default playlist order is used. If false, the playlist is ordered by upload date.</param>
 		/// <param name="downloadFolder">The folder to download videos to.</param>
-		public static void Main(string playlistId, bool doNotReorder, string downloadFolder)
+		/// <param name="season">The season folder to use. Defaults to 1.</param>
+		public static void Main(string playlistId, bool doNotReorder, string downloadFolder, int season = 1)
 		{
 			if (playlistId == null) throw new ArgumentNullException(nameof(playlistId));
 			if (downloadFolder == null) throw new ArgumentNullException(nameof(downloadFolder));
@@ -39,7 +40,7 @@ namespace YouTubeToPlex
 			var allVideos = playlist.Videos;
 			var sortedVideos = doNotReorder ? allVideos : allVideos.OrderBy(item => item.UploadDate).ToList();
 			var newVideos = sortedVideos.Where(video => !seenItems.GetIds().Contains(video.Id));
-			ProcessVideos(newVideos, seenItems, downloadFolder, localMetadata);
+			ProcessVideos(newVideos, seenItems, downloadFolder, season, localMetadata);
 		}
 
 		private static void EnsureFfmpegDependency(Ffmpeg ffmpeg)
@@ -55,10 +56,10 @@ namespace YouTubeToPlex
 			return client.GetPlaylistAsync(playlistId).Result;
 		}
 
-		private static void ProcessVideos(IEnumerable<Video> videos, SeenItems seenItems, string downloadFolder, LocalMetadata localMetadata)
+		private static void ProcessVideos(IEnumerable<Video> videos, SeenItems seenItems, string downloadFolder, int season, LocalMetadata localMetadata)
 		{
 			var client = new YoutubeClient();
-			var seasonFolder = Path.Combine(downloadFolder, "Season 1");
+			var seasonFolder = Path.Combine(downloadFolder, $"Season {season}");
 			Directory.CreateDirectory(seasonFolder);
 			var episodeNumber = GetLastEpisodeNumber(seasonFolder);
 			videos.ToList().ForEach(video =>
