@@ -68,7 +68,7 @@ namespace YouTubeToPlex
 
 				episodeNumber++;
 
-				var videoFileNameBase = $"S01E{episodeNumber.ToString("N0").PadLeft(2, '0')} " + video.Title.Replace('|', '-');
+				var videoFileNameBase = $"S01E{episodeNumber.ToString("N0").PadLeft(2, '0')} " + video.Title.Aggregate("", (agg, cur) => Path.GetInvalidFileNameChars().Contains(cur) ? agg : agg + cur);
 
 				var progress = new ConcurrentProgress<double>(d =>
 				{
