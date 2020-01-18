@@ -64,10 +64,10 @@ namespace YouTubeToPlex
 			var episodeNumber = GetLastEpisodeNumber(seasonFolder);
 			videos.ToList().ForEach(video =>
 			{
-				Console.WriteLine($"  0.00% Downloading {video.Title}");
-				Console.SetCursorPosition(0, Console.CursorTop - 1);
-
 				episodeNumber++;
+
+				Console.WriteLine($"  0.00% Downloading {video.Id} {episodeNumber} {video.Title}");
+				Console.SetCursorPosition(0, Console.CursorTop - 1);
 
 				var videoFileNameBase = $"S01E{episodeNumber.ToString("N0").PadLeft(2, '0')} " + video.Title.Aggregate("", (agg, cur) => Path.GetInvalidFileNameChars().Contains(cur) ? agg : agg + cur);
 
