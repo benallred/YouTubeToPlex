@@ -133,10 +133,18 @@ namespace YouTubeToPlex
 					Console.WriteLine();
 					Console.WriteLine($"  0.00% \t{closedCaptionTrackInfo.Language} captions");
 					Console.SetCursorPosition(0, Console.CursorTop - 1);
-					client.DownloadClosedCaptionTrackAsync(closedCaptionTrackInfo,
-							Path.Combine(downloadFolder, $"{videoFileNameBase}.{languageCode}.srt"),
-							progress)
-						.Wait();
+					try
+					{
+						client.DownloadClosedCaptionTrackAsync(closedCaptionTrackInfo,
+								Path.Combine(downloadFolder, $"{videoFileNameBase}.{languageCode}.srt"),
+								progress)
+							.Wait();
+					}
+					catch (Exception ex)
+					{
+						Console.WriteLine();
+						Console.Write("\t\tError downloading captions: " + ex.Message);
+					}
 				});
 		}
 
