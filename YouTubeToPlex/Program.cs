@@ -69,7 +69,7 @@ namespace YouTubeToPlex
 				Console.WriteLine($"  0.00% Downloading {video.Id} {episodeNumber} {video.Title}");
 				Console.SetCursorPosition(0, Console.CursorTop - 1);
 
-				var videoFileNameBase = $"S01E{episodeNumber.ToString("N0").PadLeft(2, '0')} " + video.Title.Aggregate("", (agg, cur) => Path.GetInvalidFileNameChars().Contains(cur) ? agg : agg + cur);
+				var videoFileNameBase = $"S{season.ToString().PadLeft(2, '0')}E{episodeNumber.ToString("N0").PadLeft(2, '0')} " + video.Title.Aggregate("", (agg, cur) => Path.GetInvalidFileNameChars().Contains(cur) ? agg : agg + cur);
 
 				var progress = new ConcurrentProgress<double>(d =>
 				{
