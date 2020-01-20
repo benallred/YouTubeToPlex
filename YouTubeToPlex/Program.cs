@@ -90,12 +90,10 @@ namespace YouTubeToPlex
 		private static int GetLastEpisodeNumber(string seasonFolder)
 		{
 			return Directory
-				.EnumerateFiles(seasonFolder, "S01E??*")
-				.OrderByDescending(s => s)
-				.FirstOrDefault()
-				.Convert(
-					some: fileName => Regex.Match(fileName, @"S01E(\d\d)").Groups[1].Value.Convert(int.Parse),
-					none: () => 0);
+				.EnumerateFiles(seasonFolder, "S??E??*")
+				.Select(fileName => Regex.Match(fileName, @"S\d\dE(\d{2,}) ").Groups[1].Value.Convert(int.Parse))
+				.DefaultIfEmpty()
+				.Max();
 		}
 
 		private static void DownloadVideo(IYoutubeClient client, Video video, string downloadFolder, string videoFileNameBase, IProgress<double> progress)
