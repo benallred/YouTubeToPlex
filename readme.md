@@ -12,12 +12,12 @@ Downloads videos from YouTube and creates metadata for use in Plex (via somethin
 
 Current functionality is limited to downloading all videos in a playlist.
 
-`dotnet run --project .\YouTubeToPlex\ -- --playlist-id <playlist id> --download-folder <download folder>`
+`dotnet run --project .\YouTubeToPlex\ -- playlist --id <playlist id> --download-folder <download folder>`
 
 By default, the playlist is ordered by upload date. This can be disabled by using `--do-not-reorder`
 
-`dotnet run --project .\YouTubeToPlex\ -- --playlist-id <playlist id> --download-folder <download folder> --do-not-reorder`
+`dotnet run --project .\YouTubeToPlex\ -- playlist --id <playlist id> --download-folder <download folder> --do-not-reorder`
 
 By default, videos are downloaded to the "Season 1" folder. This can be overridden by using `--season <number>`
 
-`dotnet run --project .\YouTubeToPlex\ -- --playlist-id <playlist id> --download-folder <download folder> --season <number>`
+`dotnet run --project .\YouTubeToPlex\ -- playlist --id <playlist id> --download-folder <download folder> --season <number>`
