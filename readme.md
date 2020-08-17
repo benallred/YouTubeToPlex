@@ -8,7 +8,7 @@ Downloads videos from YouTube and creates metadata for use in Plex (via somethin
 
 ## Usage
 
-`dotnet run --project .\YouTubeToPlex\ -- --usage`
+`dotnet run --project .\YouTubeToPlex\ -- --help`
 
 Current functionality is limited to downloading all videos in a playlist.
 
