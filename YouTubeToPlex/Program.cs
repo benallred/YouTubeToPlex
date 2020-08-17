@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -16,14 +18,25 @@ namespace YouTubeToPlex
 {
 	internal class Program
 	{
-		/// <summary>
-		/// Downloads videos from a YouTube playlist and creates metadata for use in media players.
-		/// </summary>
-		/// <param name="playlistId">The ID of the YouTube playlist.</param>
-		/// <param name="doNotReorder">If true, the default playlist order is used. If false, the playlist is ordered by upload date.</param>
-		/// <param name="downloadFolder">The folder to download videos to.</param>
-		/// <param name="season">The season folder to use.</param>
-		public static void Main(string playlistId, bool doNotReorder, string downloadFolder, int season = 1)
+		public static void Main(string[] args)
+		{
+			var playlistCommand = new Command("playlist", "Downloads videos from a YouTube playlist")
+			{
+				new Option("playlist-id", "The ID of the YouTube playlist"),
+				new Option("do-not-reorder", "If true, the default playlist order is used. If false, the playlist is ordered by upload date."),
+				new Option("download-folder", "The folder to download videos to"),
+				new Option("season", "The season folder to use"),
+			};
+			playlistCommand.Handler = CommandHandler.Create<string, bool, string, int>(DownloadPlaylist);
+
+			var rootCommand = new RootCommand("Downloads videos from YouTube and creates metadata for use in media players")
+			{
+				playlistCommand
+			};
+			rootCommand.Invoke(args);
+		}
+
+		public static void DownloadPlaylist(string playlistId, bool doNotReorder, string downloadFolder, int season = 1)
 		{
 			if (playlistId == null) throw new ArgumentNullException(nameof(playlistId));
 			if (downloadFolder == null) throw new ArgumentNullException(nameof(downloadFolder));
