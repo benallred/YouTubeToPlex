@@ -31,6 +31,8 @@ namespace YouTubeToPlex.Tests.MediaServerHelpers
 			return File.ReadAllText(Path.Combine(Folder, fileNameWithoutExtension + ".nfo"));
 		}
 
+		#region TVShow
+
 		[Fact]
 		public void Save_TVShow_Required()
 		{
@@ -66,11 +68,11 @@ b</plot>
 		public void Save_TVShow_PosterPath()
 		{
 			var fakePosterPath = Path.GetTempFileName();
-			var fakePosterContents = "fake tv show poster";
+			var fakePosterContents = "fake poster";
 			File.WriteAllText(fakePosterPath, fakePosterContents);
 
-			string posterMetadataPath = Path.Combine(Folder, $"folder{Path.GetExtension(fakePosterPath)}");
 			var metadata = new TVShow(title: "title", posterPathOrUrl: fakePosterPath);
+			string posterMetadataPath = Path.Combine(Folder, $"folder{Path.GetExtension(fakePosterPath)}");
 
 			LocalMetadata.Save(metadata, Folder);
 
@@ -81,18 +83,22 @@ b</plot>
 		[Fact]
 		public void Save_TVShow_PosterUrl()
 		{
-			var fakePosterUrl = "https://fake.tv.show/poster.png";
-			var fakePosterContents = "fake tv show poster";
+			var fakePosterUrl = "https://fake.com/poster.png";
+			var fakePosterContents = "fake poster";
 			FakeHttpMessageHandler.Mock(fakePosterUrl, fakePosterContents);
 
-			string posterMetadataPath = Path.Combine(Folder, "folder.png");
 			var metadata = new TVShow(title: "title", posterPathOrUrl: fakePosterUrl);
+			string posterMetadataPath = Path.Combine(Folder, "folder.png");
 
 			LocalMetadata.Save(metadata, Folder);
 
 			File.Exists(posterMetadataPath).ShouldBeTrue();
 			File.ReadAllText(posterMetadataPath).ShouldBe(fakePosterContents);
 		}
+
+		#endregion
+
+		#region Episode
 
 		[Fact]
 		public void Save_Episode_Required()
@@ -124,5 +130,74 @@ b</plot>
 </episodedetails>"
 			);
 		}
+
+		#endregion
+
+		#region Movie
+
+		[Fact]
+		public void Save_Movie_Required()
+		{
+			var metadata = new Movie("제목");
+			LocalMetadata.Save(metadata, Folder, metadata.Title);
+			GetMetadataFileContents(metadata.Title).ShouldBe(
+@"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<movie>
+	<title>제목</title>
+	<plot />
+	<releasedate />
+</movie>"
+			);
+		}
+
+		[Fact]
+		public void Save_Movie_Optional()
+		{
+			var metadata = new Movie(title: "제목", plot: "a\nb", releaseDate: new DateTime(2019, 02, 03), posterPathOrUrl: "");
+			LocalMetadata.Save(metadata, Folder, metadata.Title);
+			GetMetadataFileContents(metadata.Title).ShouldBe(
+@"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<movie>
+	<title>제목</title>
+	<plot>a
+b</plot>
+	<releasedate>2019-02-03</releasedate>
+</movie>"
+			);
+		}
+
+		[Fact]
+		public void Save_Movie_PosterPath()
+		{
+			var fakePosterPath = Path.GetTempFileName();
+			var fakePosterContents = "fake poster";
+			File.WriteAllText(fakePosterPath, fakePosterContents);
+
+			var metadata = new Movie(title: "title", posterPathOrUrl: fakePosterPath);
+			string posterMetadataPath = Path.Combine(Folder, $"{metadata.Title}{Path.GetExtension(fakePosterPath)}");
+
+			LocalMetadata.Save(metadata, Folder, metadata.Title);
+
+			File.Exists(posterMetadataPath).ShouldBeTrue();
+			File.ReadAllText(posterMetadataPath).ShouldBe(fakePosterContents);
+		}
+
+		[Fact]
+		public void Save_Movie_PosterUrl()
+		{
+			var fakePosterUrl = "https://fake.com/poster.png";
+			var fakePosterContents = "fake poster";
+			FakeHttpMessageHandler.Mock(fakePosterUrl, fakePosterContents);
+
+			var metadata = new Movie(title: "title", posterPathOrUrl: fakePosterUrl);
+			string posterMetadataPath = Path.Combine(Folder, $"{metadata.Title}.png");
+
+			LocalMetadata.Save(metadata, Folder, metadata.Title);
+
+			File.Exists(posterMetadataPath).ShouldBeTrue();
+			File.ReadAllText(posterMetadataPath).ShouldBe(fakePosterContents);
+		}
+
+		#endregion
 	}
 }

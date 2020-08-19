@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace YouTubeToPlex
+namespace YouTubeToPlex.MediaServerHelpers
 {
-	internal static class ObjectExtensions
+	public static class ObjectExtensions
 	{
 		public static TTo Convert<TFrom, TTo>(this TFrom obj, Func<TFrom, TTo> convert)
 		{

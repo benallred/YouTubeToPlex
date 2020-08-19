@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.Net.Http;
 using YouTubeToPlex.MediaServerHelpers;
 using YouTubeToPlex.SubPrograms.Playlist;
+using YouTubeToPlex.SubPrograms.Video;
 
 namespace YouTubeToPlex
 {
@@ -12,10 +13,12 @@ namespace YouTubeToPlex
 		{
 			var httpClient = new HttpClient();
 			var playlistSubprogram = new PlaylistSubProgram(httpClient);
+			var videoSubprogram = new VideoSubProgram(httpClient);
 
 			var rootCommand = new RootCommand("Downloads videos from YouTube and creates metadata for use in media players")
 			{
 				playlistSubprogram.GetCommand(),
+				videoSubprogram.GetCommand(),
 			};
 
 			EnsureFfmpegDependency(new Ffmpeg(httpClient));
