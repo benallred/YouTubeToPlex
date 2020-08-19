@@ -8,7 +8,7 @@ namespace YouTubeToPlex
 {
 	internal class Program
 	{
-		public static void Main(string[] args)
+		public static int Main(string[] args)
 		{
 			var httpClient = new HttpClient();
 			var playlistSubprogram = new PlaylistSubProgram(httpClient);
@@ -20,7 +20,7 @@ namespace YouTubeToPlex
 
 			EnsureFfmpegDependency(new Ffmpeg(httpClient));
 
-			rootCommand.Invoke(args);
+			return rootCommand.Invoke(args);
 		}
 
 		private static void EnsureFfmpegDependency(Ffmpeg ffmpeg)
