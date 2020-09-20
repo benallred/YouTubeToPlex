@@ -29,5 +29,11 @@ namespace YouTubeToPlex.MediaServerHelpers
 				none?.Invoke();
 			}
 		}
+
+		public static TTo Case<TFrom, TTo>(this TFrom? obj, Func<TFrom, TTo> some, Func<TTo> none)
+			where TFrom : class
+		{
+			return obj != null ? some(obj) : none();
+		}
 	}
 }
