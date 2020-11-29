@@ -15,18 +15,29 @@ namespace YouTubeToPlex
 	{
 		public static void DownloadVideo(YoutubeClient client, YTVideo video, string downloadFolder, string videoFileNameBase, IProgress<double> progress)
 		{
-			var converter = new YoutubeConverter(client, Ffmpeg.DefaultFilePath);
-
 			var mediaStreamInfoSet = client.Videos.Streams.GetManifestAsync(video.Id).Result;
-			var videoStreamInfo = mediaStreamInfoSet.GetVideoOnly().OrderByDescending(info => info.VideoQuality).ThenByDescending(info => info.Framerate).First();
-			var audioStreamInfo = mediaStreamInfoSet.GetAudioOnly().OrderByDescending(info => info.Bitrate).First();
+			var videoStreamInfo = mediaStreamInfoSet.GetVideo().WithHighestVideoQuality();
+			var audioStreamInfo = mediaStreamInfoSet.GetAudio().WithHighestBitrate();
+
+			if (videoStreamInfo == null)
+			{
+				throw new InvalidDataException("No video stream found for video id " + video.Id);
+			}
+
+			if (audioStreamInfo == null)
+			{
+				throw new InvalidDataException("No audio stream found for video id " + video.Id);
+			}
 
 			var extension = videoStreamInfo.Container.Name;
 
-			converter.DownloadAndProcessMediaStreamsAsync(
+			client.Videos.DownloadAsync(
 					new IStreamInfo[] { videoStreamInfo, audioStreamInfo },
-					Path.Combine(downloadFolder, videoFileNameBase + $".{extension}"),
-					extension,
+					new ConversionRequestBuilder(
+							Path.Combine(downloadFolder, videoFileNameBase + $".{extension}"))
+						.SetFFmpegPath(Ffmpeg.DefaultFilePath)
+						.SetPreset(ConversionPreset.VerySlow)
+						.Build(),
 					progress)
 				.Wait();
 		}
