@@ -60,8 +60,8 @@ namespace YouTubeToPlex.SubPrograms.Playlist
 			Console.WriteLine($"Getting playlist {playlistId}");
 			var client = new YoutubeClient();
 			var playlist = client.Playlists.GetAsync(playlistId);
-			var videos = client.Playlists.GetVideosAsync(playlistId);
-			return new PlaylistMetadataAndVideos(playlist.Result, videos.BufferAsync().Result);
+			var videos = client.Playlists.GetVideosAsync(playlistId).SelectAwait(playlistVideo => client.Videos.GetAsync(playlistVideo.Id));
+			return new PlaylistMetadataAndVideos(playlist.Result, videos.ToListAsync().Result);
 		}
 
 		private void ProcessVideos(IEnumerable<YTVideo> videos, SeenItems seenItems, string downloadFolder, int season, LocalMetadata localMetadata)
@@ -131,9 +131,9 @@ namespace YouTubeToPlex.SubPrograms.Playlist
 		private class PlaylistMetadataAndVideos
 		{
 			public YTPlaylist Metadata;
-			public IReadOnlyList<YTVideo> Videos;
+			public IList<YTVideo> Videos;
 
-			public PlaylistMetadataAndVideos(YTPlaylist metadata, IReadOnlyList<YTVideo> videos)
+			public PlaylistMetadataAndVideos(YTPlaylist metadata, IList<YTVideo> videos)
 			{
 				Metadata = metadata;
 				Videos = videos;

@@ -16,8 +16,8 @@ namespace YouTubeToPlex
 		public static void DownloadVideo(YoutubeClient client, YTVideo video, string downloadFolder, string videoFileNameBase, IProgress<double> progress)
 		{
 			var mediaStreamInfoSet = client.Videos.Streams.GetManifestAsync(video.Id).Result;
-			var videoStreamInfo = mediaStreamInfoSet.GetVideo().WithHighestVideoQuality();
-			var audioStreamInfo = mediaStreamInfoSet.GetAudio().WithHighestBitrate();
+			var videoStreamInfo = mediaStreamInfoSet.GetVideoStreams().GetWithHighestVideoQuality();
+			var audioStreamInfo = mediaStreamInfoSet.GetAudioStreams().GetWithHighestBitrate();
 
 			if (videoStreamInfo == null)
 			{
@@ -39,6 +39,7 @@ namespace YouTubeToPlex
 						.SetPreset(ConversionPreset.VerySlow)
 						.Build(),
 					progress)
+				.AsTask()
 				.Wait();
 		}
 
@@ -66,6 +67,7 @@ namespace YouTubeToPlex
 						client.Videos.ClosedCaptions.DownloadAsync(info,
 								Path.Combine(downloadFolder, $"{videoFileNameBase}.{languageCode}.srt"),
 								progress)
+							.AsTask()
 							.Wait();
 					}
 					catch (Exception ex)
