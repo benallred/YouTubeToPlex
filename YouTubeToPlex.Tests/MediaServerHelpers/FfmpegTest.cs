@@ -56,7 +56,7 @@ namespace YouTubeToPlex.Tests.MediaServerHelpers
 		[Fact]
 		public void EnsureExists_DefaultFilePath_FileExists()
 		{
-			Directory.CreateDirectory(Path.GetDirectoryName(Ffmpeg.DefaultFilePath));
+			Directory.CreateDirectory(Path.GetDirectoryName(Ffmpeg.DefaultFilePath)!);
 			File.WriteAllText(Ffmpeg.DefaultFilePath, "fake file");
 			Ffmpeg.EnsureExists();
 			File.ReadAllText(Ffmpeg.DefaultFilePath).ShouldBe("fake file");

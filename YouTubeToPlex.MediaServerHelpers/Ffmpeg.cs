@@ -34,7 +34,7 @@ namespace YouTubeToPlex.MediaServerHelpers
 
 		private void DownloadZip(string uri, string downloadToPath)
 		{
-			Directory.CreateDirectory(Path.GetDirectoryName(downloadToPath));
+			Directory.CreateDirectory(Path.GetDirectoryName(downloadToPath)!);
 			var response = HttpClient.GetAsync(uri).Result.Convert(
 				httpResponseMessage => httpResponseMessage.Headers.Location.Case(
 					some: redirectUri => HttpClient.GetAsync(redirectUri).Result,
@@ -45,7 +45,7 @@ namespace YouTubeToPlex.MediaServerHelpers
 
 		private static void ExtractFile(string zipFilePath, string extractToPath)
 		{
-			Directory.CreateDirectory(Path.GetDirectoryName(extractToPath));
+			Directory.CreateDirectory(Path.GetDirectoryName(extractToPath)!);
 			ZipFile
 				.OpenRead(zipFilePath)
 				.Entries

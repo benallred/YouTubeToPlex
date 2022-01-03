@@ -26,7 +26,7 @@ namespace YouTubeToPlex.Tests
 
 		protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-			if (RequestToResponse.TryGetValue(request.RequestUri.ToString(), out var responseContent))
+			if (RequestToResponse.TryGetValue(request.RequestUri!.ToString(), out var responseContent))
 			{
 				return Task.FromResult(new HttpResponseMessage() { Content = new StringContent(responseContent) });
 			}
