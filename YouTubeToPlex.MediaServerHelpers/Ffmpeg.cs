@@ -2,9 +2,8 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Reflection;
+using System.Threading.Tasks;
 
 namespace YouTubeToPlex.MediaServerHelpers
 {
@@ -19,7 +18,7 @@ namespace YouTubeToPlex.MediaServerHelpers
 			HttpClient = httpClient;
 		}
 
-		public void EnsureExists(string? customFilePath = null)
+		public async Task EnsureExists(string? customFilePath = null)
 		{
 			var ffmpegFilePath = customFilePath ?? DefaultFilePath;
 			// var ffmpegFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, @"ffmpeg.exe");
@@ -27,18 +26,19 @@ namespace YouTubeToPlex.MediaServerHelpers
 			{
 				const string ffmpegZipFileName = "ffmpeg-release-essentials.zip";
 				var ffmpegZipFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(), ffmpegZipFileName);
-				DownloadZip($"https://www.gyan.dev/ffmpeg/builds/{ffmpegZipFileName}", ffmpegZipFilePath);
+				await DownloadZip($"https://www.gyan.dev/ffmpeg/builds/{ffmpegZipFileName}", ffmpegZipFilePath);
 				ExtractFile(ffmpegZipFilePath, ffmpegFilePath);
 			}
 		}
 
-		private void DownloadZip(string uri, string downloadToPath)
+		private async Task DownloadZip(string uri, string downloadToPath)
 		{
 			Directory.CreateDirectory(Path.GetDirectoryName(downloadToPath)!);
-			var response = HttpClient.GetAsync(uri).Result.Convert(
-				httpResponseMessage => httpResponseMessage.Headers.Location.Case(
-					some: redirectUri => HttpClient.GetAsync(redirectUri).Result,
-					none: () => httpResponseMessage));
+			var response = await HttpClient.GetAsync(uri);
+			//var response = HttpClient.GetAsync(uri).Result.Convert(
+			//	httpResponseMessage => httpResponseMessage.Headers.Location.Case(
+			//		some: redirectUri => HttpClient.GetAsync(redirectUri).Result,
+			//		none: () => httpResponseMessage));
 			using var fileStream = new FileStream(downloadToPath, FileMode.CreateNew);
 			response.Content.CopyToAsync(fileStream).Wait();
 		}

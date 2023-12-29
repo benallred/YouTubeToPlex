@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
 using YouTubeToPlex.MediaServerHelpers;
@@ -39,35 +40,35 @@ namespace YouTubeToPlex.Tests.MediaServerHelpers
 		}
 
 		[Fact]
-		public void EnsureExists_DefaultFilePath_FileDoesNotExist()
+		public async Task EnsureExists_DefaultFilePath_FileDoesNotExistAsync()
 		{
-			Ffmpeg.EnsureExists();
+			await Ffmpeg.EnsureExists();
 			File.Exists(Ffmpeg.DefaultFilePath).ShouldBeTrue();
 		}
 
 		[Fact]
-		public void EnsureExists_CustomFilePath_FileDoesNotExist()
+		public async Task EnsureExists_CustomFilePath_FileDoesNotExistAsync()
 		{
 			var customFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".tmp");
-			Ffmpeg.EnsureExists(customFilePath);
+			await Ffmpeg.EnsureExists(customFilePath);
 			File.Exists(customFilePath).ShouldBeTrue();
 		}
 
 		[Fact]
-		public void EnsureExists_DefaultFilePath_FileExists()
+		public async Task EnsureExists_DefaultFilePath_FileExistsAsync()
 		{
 			Directory.CreateDirectory(Path.GetDirectoryName(Ffmpeg.DefaultFilePath)!);
 			File.WriteAllText(Ffmpeg.DefaultFilePath, "fake file");
-			Ffmpeg.EnsureExists();
+			await Ffmpeg.EnsureExists();
 			File.ReadAllText(Ffmpeg.DefaultFilePath).ShouldBe("fake file");
 		}
 
 		[Fact]
-		public void EnsureExists_CustomFilePath_FileExists()
+		public async Task EnsureExists_CustomFilePath_FileExistsAsync()
 		{
 			var customFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".tmp");
 			File.WriteAllText(customFilePath, "fake file");
-			Ffmpeg.EnsureExists();
+			await Ffmpeg.EnsureExists();
 			File.ReadAllText(customFilePath).ShouldBe("fake file");
 		}
 	}
