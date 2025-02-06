@@ -4,7 +4,7 @@ Downloads videos from YouTube and creates metadata for use in Plex (via somethin
 
 ## Requirements
 
-[.NET 5](https://dotnet.microsoft.com/download)
+[.NET 9](https://dotnet.microsoft.com/download)
 
 ## Usage
 
