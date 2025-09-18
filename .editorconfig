@@ -6,6 +6,15 @@ tab_width = 3
 insert_final_newline = true
 charset = utf-8-bom
 
+[*.{yml,yaml}]
+indent_size = 2
+tab_width = 2
+
+[*.md]
+indent_size = 2
+tab_width = 2
+trim_trailing_whitespace = false
+
 # .NET (https://aka.ms/editorconfigdocs)
 [*]
 dotnet_sort_system_directives_first = true
