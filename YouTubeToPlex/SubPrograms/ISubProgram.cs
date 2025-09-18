@@ -1,9 +1,9 @@
-using System.CommandLine;
+﻿using System.CommandLine;
 
 namespace YouTubeToPlex.SubPrograms
 {
-	internal interface ISubProgram
-	{
-		Command GetCommand();
-	}
+    internal interface ISubProgram
+    {
+        Command GetCommand();
+    }
 }
