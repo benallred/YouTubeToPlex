@@ -1,0 +1,37 @@
+name: Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "**/readme.md"
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - "**/readme.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+permissions: {}
+
+env:
+  DOTNET_NOLOGO: true
+  ASPNETCORE_ENVIRONMENT: Development
+
+jobs:
+  context-info:
+    uses: benallred/gha-reference/.github/workflows/context-info.yml@ea37b38e6d51bc51ec90b1a4ae08e77232963ec5
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet build -c Release
+      - run: dotnet test -c Release --no-build --logger "console;verbosity=detailed"
