@@ -12,7 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20574.7" />
+        <PackageReference Include="System.CommandLine" Version="2.0.0-rc.2.25502.107" />
         <PackageReference Include="System.Linq.Async" Version="6.0.3" />
         <PackageReference Include="YoutubeExplode" Version="6.5.6" />
         <PackageReference Include="YoutubeExplode.Converter" Version="6.5.6" />
