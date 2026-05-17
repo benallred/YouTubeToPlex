@@ -23,7 +23,7 @@ namespace YouTubeToPlex
 
             EnsureFfmpegDependency(new Ffmpeg(httpClient));
 
-            return rootCommand.Invoke(args);
+            return rootCommand.Parse(args).Invoke();
         }
 
         private static void EnsureFfmpegDependency(Ffmpeg ffmpeg)

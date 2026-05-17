@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using YoutubeExplode;
 using YouTubeToPlex.MediaServerHelpers;
 
@@ -25,18 +25,41 @@ namespace YouTubeToPlex.SubPrograms.Playlist
 
         public Command GetCommand()
         {
+            var idOption = new Option<string>("--id")
+            {
+                Description = "The ID of the YouTube playlist",
+                Required = true,
+            };
+            var doNotReorderOption = new Option<bool>("--do-not-reorder")
+            {
+                Description = "If true, the default playlist order is used. If false, the playlist is ordered by upload date.",
+            };
+            var downloadFolderOption = new Option<string>("--download-folder")
+            {
+                Description = "The folder to download videos to",
+                Required = true,
+            };
+            var seasonOption = new Option<int>("--season")
+            {
+                Description = "The season folder to use [default = 1]",
+                DefaultValueFactory = _ => 1,
+            };
             var command = new Command("playlist", "Downloads videos from a YouTube playlist")
             {
-                new Option<string>("--id", "The ID of the YouTube playlist"),
-                new Option<bool>("--do-not-reorder", "If true, the default playlist order is used. If false, the playlist is ordered by upload date."),
-                new Option<string>("--download-folder", "The folder to download videos to"),
-                new Option<int>("--season", "The season folder to use [default = 1]"),
+                idOption,
+                doNotReorderOption,
+                downloadFolderOption,
+                seasonOption,
             };
-            command.Handler = CommandHandler.Create<string, bool, string, int>(DownloadPlaylist);
+            command.SetAction(async parseResult => await DownloadPlaylist(
+                parseResult.GetRequiredValue(idOption),
+                parseResult.GetValue(doNotReorderOption),
+                parseResult.GetRequiredValue(downloadFolderOption),
+                parseResult.GetValue(seasonOption)));
             return command;
         }
 
-        public void DownloadPlaylist(string id, bool doNotReorder, string downloadFolder, int season = 1)
+        public async Task DownloadPlaylist(string id, bool doNotReorder, string downloadFolder, int season = 1)
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
             if (downloadFolder == null) throw new ArgumentNullException(nameof(downloadFolder));
@@ -46,7 +69,7 @@ namespace YouTubeToPlex.SubPrograms.Playlist
             var seenItems = new SeenItems(downloadFolder);
             var localMetadata = new LocalMetadata(HttpClient);
 
-            var playlist = GetPlaylist(id);
+            var playlist = await GetPlaylist(id);
             EnsureMetadata(playlist, downloadFolder, localMetadata);
 
             var allVideos = playlist.Videos;
@@ -55,13 +78,24 @@ namespace YouTubeToPlex.SubPrograms.Playlist
             ProcessVideos(newVideos, seenItems, downloadFolder, season, localMetadata);
         }
 
-        private PlaylistMetadataAndVideos GetPlaylist(string playlistId)
+        private async Task<PlaylistMetadataAndVideos> GetPlaylist(string playlistId)
         {
             Console.WriteLine($"Getting playlist {playlistId}");
             var client = new YoutubeClient();
-            var playlist = client.Playlists.GetAsync(playlistId);
-            var videos = client.Playlists.GetVideosAsync(playlistId).SelectAwait(playlistVideo => client.Videos.GetAsync(playlistVideo.Id));
-            return new PlaylistMetadataAndVideos(playlist.Result, videos.ToListAsync().Result);
+            var playlist = await client.Playlists.GetAsync(playlistId);
+            var videos = await GetVideos(client, playlistId);
+            return new PlaylistMetadataAndVideos(playlist, videos);
+        }
+
+        private static async Task<IList<YTVideo>> GetVideos(YoutubeClient client, string playlistId)
+        {
+            var videos = new List<YTVideo>();
+            await foreach (var playlistVideo in client.Playlists.GetVideosAsync(playlistId))
+            {
+                videos.Add(await client.Videos.GetAsync(playlistVideo.Id));
+            }
+
+            return videos;
         }
 
         private void ProcessVideos(IEnumerable<YTVideo> videos, SeenItems seenItems, string downloadFolder, int season, LocalMetadata localMetadata)
