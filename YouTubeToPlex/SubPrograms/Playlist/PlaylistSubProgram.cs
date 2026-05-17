@@ -51,7 +51,7 @@ namespace YouTubeToPlex.SubPrograms.Playlist
                 downloadFolderOption,
                 seasonOption,
             };
-            command.SetAction(parseResult => DownloadPlaylist(
+            command.SetAction(async parseResult => await DownloadPlaylist(
                 parseResult.GetRequiredValue(idOption),
                 parseResult.GetValue(doNotReorderOption),
                 parseResult.GetRequiredValue(downloadFolderOption),
@@ -59,7 +59,7 @@ namespace YouTubeToPlex.SubPrograms.Playlist
             return command;
         }
 
-        public void DownloadPlaylist(string id, bool doNotReorder, string downloadFolder, int season = 1)
+        public async Task DownloadPlaylist(string id, bool doNotReorder, string downloadFolder, int season = 1)
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
             if (downloadFolder == null) throw new ArgumentNullException(nameof(downloadFolder));
@@ -69,7 +69,7 @@ namespace YouTubeToPlex.SubPrograms.Playlist
             var seenItems = new SeenItems(downloadFolder);
             var localMetadata = new LocalMetadata(HttpClient);
 
-            var playlist = GetPlaylist(id);
+            var playlist = await GetPlaylist(id);
             EnsureMetadata(playlist, downloadFolder, localMetadata);
 
             var allVideos = playlist.Videos;
@@ -78,12 +78,12 @@ namespace YouTubeToPlex.SubPrograms.Playlist
             ProcessVideos(newVideos, seenItems, downloadFolder, season, localMetadata);
         }
 
-        private PlaylistMetadataAndVideos GetPlaylist(string playlistId)
+        private async Task<PlaylistMetadataAndVideos> GetPlaylist(string playlistId)
         {
             Console.WriteLine($"Getting playlist {playlistId}");
             var client = new YoutubeClient();
-            var playlist = client.Playlists.GetAsync(playlistId).GetAwaiter().GetResult();
-            var videos = GetVideos(client, playlistId).GetAwaiter().GetResult();
+            var playlist = await client.Playlists.GetAsync(playlistId);
+            var videos = await GetVideos(client, playlistId);
             return new PlaylistMetadataAndVideos(playlist, videos);
         }
 
