@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using YoutubeExplode;
 using YouTubeToPlex.MediaServerHelpers;
 
@@ -81,9 +82,20 @@ namespace YouTubeToPlex.SubPrograms.Playlist
         {
             Console.WriteLine($"Getting playlist {playlistId}");
             var client = new YoutubeClient();
-            var playlist = client.Playlists.GetAsync(playlistId);
-            var videos = client.Playlists.GetVideosAsync(playlistId).Select((playlistVideo, cancellationToken) => client.Videos.GetAsync(playlistVideo.Id, cancellationToken));
-            return new PlaylistMetadataAndVideos(playlist.Result, videos.ToListAsync().Result);
+            var playlist = client.Playlists.GetAsync(playlistId).GetAwaiter().GetResult();
+            var videos = GetVideos(client, playlistId).GetAwaiter().GetResult();
+            return new PlaylistMetadataAndVideos(playlist, videos);
+        }
+
+        private static async Task<IList<YTVideo>> GetVideos(YoutubeClient client, string playlistId)
+        {
+            var videos = new List<YTVideo>();
+            await foreach (var playlistVideo in client.Playlists.GetVideosAsync(playlistId))
+            {
+                videos.Add(await client.Videos.GetAsync(playlistVideo.Id));
+            }
+
+            return videos;
         }
 
         private void ProcessVideos(IEnumerable<YTVideo> videos, SeenItems seenItems, string downloadFolder, int season, LocalMetadata localMetadata)
