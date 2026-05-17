@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -22,12 +21,24 @@ namespace YouTubeToPlex.SubPrograms.Video
 
         public Command GetCommand()
         {
+            var idOption = new Option<string>("--id")
+            {
+                Description = "The ID of the YouTube video",
+                Required = true,
+            };
+            var downloadFolderOption = new Option<string>("--download-folder")
+            {
+                Description = "The folder to download the video to",
+                Required = true,
+            };
             var command = new Command("video", "Downloads a single YouTube video")
             {
-                new Option<string>("--id", "The ID of the YouTube video"),
-                new Option<string>("--download-folder", "The folder to download the video to"),
+                idOption,
+                downloadFolderOption,
             };
-            command.Handler = CommandHandler.Create<string, string>(DownloadVideo);
+            command.SetAction(parseResult => DownloadVideo(
+                parseResult.GetRequiredValue(idOption),
+                parseResult.GetRequiredValue(downloadFolderOption)));
             return command;
         }
 

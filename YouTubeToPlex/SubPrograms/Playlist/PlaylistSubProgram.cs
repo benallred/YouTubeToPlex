@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -25,14 +24,37 @@ namespace YouTubeToPlex.SubPrograms.Playlist
 
         public Command GetCommand()
         {
+            var idOption = new Option<string>("--id")
+            {
+                Description = "The ID of the YouTube playlist",
+                Required = true,
+            };
+            var doNotReorderOption = new Option<bool>("--do-not-reorder")
+            {
+                Description = "If true, the default playlist order is used. If false, the playlist is ordered by upload date.",
+            };
+            var downloadFolderOption = new Option<string>("--download-folder")
+            {
+                Description = "The folder to download videos to",
+                Required = true,
+            };
+            var seasonOption = new Option<int>("--season")
+            {
+                Description = "The season folder to use [default = 1]",
+                DefaultValueFactory = _ => 1,
+            };
             var command = new Command("playlist", "Downloads videos from a YouTube playlist")
             {
-                new Option<string>("--id", "The ID of the YouTube playlist"),
-                new Option<bool>("--do-not-reorder", "If true, the default playlist order is used. If false, the playlist is ordered by upload date."),
-                new Option<string>("--download-folder", "The folder to download videos to"),
-                new Option<int>("--season", "The season folder to use [default = 1]"),
+                idOption,
+                doNotReorderOption,
+                downloadFolderOption,
+                seasonOption,
             };
-            command.Handler = CommandHandler.Create<string, bool, string, int>(DownloadPlaylist);
+            command.SetAction(parseResult => DownloadPlaylist(
+                parseResult.GetRequiredValue(idOption),
+                parseResult.GetValue(doNotReorderOption),
+                parseResult.GetRequiredValue(downloadFolderOption),
+                parseResult.GetValue(seasonOption)));
             return command;
         }
 
@@ -60,7 +82,7 @@ namespace YouTubeToPlex.SubPrograms.Playlist
             Console.WriteLine($"Getting playlist {playlistId}");
             var client = new YoutubeClient();
             var playlist = client.Playlists.GetAsync(playlistId);
-            var videos = client.Playlists.GetVideosAsync(playlistId).SelectAwait(playlistVideo => client.Videos.GetAsync(playlistVideo.Id));
+            var videos = client.Playlists.GetVideosAsync(playlistId).Select((playlistVideo, cancellationToken) => client.Videos.GetAsync(playlistVideo.Id, cancellationToken));
             return new PlaylistMetadataAndVideos(playlist.Result, videos.ToListAsync().Result);
         }
 
